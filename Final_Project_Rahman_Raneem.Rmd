@@ -1,0 +1,148 @@
+---
+title: "Final_Project"
+output: html_document
+date: "2024-01-23"
+---
+
+```{r setup, include=FALSE}
+# loading datasets
+options(repos = c(CRAN = "https://cran.rstudio.com"))
+library(readr)
+library(dplyr)
+
+data2019 <- read_csv("/Users/raneemrahman/Desktop/MGSC_310/datasets/2019.csv")
+data2020 <- read_csv("/Users/raneemrahman/Desktop/MGSC_310/datasets/2020.csv")
+data2022 <- read_csv("/Users/raneemrahman/Desktop/MGSC_310/datasets/2022.csv")
+
+# rename columns for 2019 dataset
+data2019 <- data2019 %>% 
+  rename(
+    Country = `Country or region`,
+    `Happiness score` = Score,
+    `Healthy life expectancy` = `Healthy life expectancy`
+  )
+
+# rename columns for 2020 dataset
+data2020 <- data2020 %>% 
+  rename(
+    Country = `Country name`,
+    `Happiness score` = `Ladder score`,
+    `Healthy life expectancy` = `Healthy life expectancy`,
+    `Freedom to make life choices` = `Freedom to make life choices`
+  )
+
+# rename columns for 2022 dataset
+data2022 <- data2022 %>% 
+  rename(
+    Country = `Country`,
+    `Happiness score` = `Happiness score`,
+    `Healthy life expectancy` = `Explained by: Healthy life expectancy`,
+    `Social support` = `Explained by: Social support`,
+    `Freedom to make life choices` = `Explained by: Freedom to make life choices`
+  )
+
+names(data2019)
+names(data2020)
+names(data2022)
+```
+
+Multiple Linear Regression to show the relationship between social support and happiness score for each dataset
+```{r multiple linear regression}
+
+# multiple linear regression model for 2019 dataset
+model_2019 <- lm(`Happiness score` ~ `Social support`, data = data2019)
+summary(model_2019)
+
+# multiple linear regression model for 2020 dataset
+model_2020 <- lm(`Happiness score` ~ `Social support`, data = data2020)
+summary(model_2020)
+
+
+# multiple linear regression model for 2022 dataset
+model_2022 <- lm(`Happiness score` ~ `Social support`, data = data2022)
+summary(model_2022)
+
+
+```
+
+Graph the results
+```{r multiple linear regression graph}
+library(ggplot2)
+
+# plot for 2019 dataset
+plot_2019 <- ggplot(data2019, aes(x = `Social support`, y = `Happiness score`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(title = "Linear Regression - 2019 Dataset",
+       x = "Social support",
+       y = "Happiness score") 
+
+# plot for 2020 dataset
+plot_2020 <- ggplot(data2020, aes(x = `Social support`, y = `Happiness score`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "green") +
+  labs(title = "Linear Regression - 2020 Dataset",
+       x = "Social support",
+       y = "Happiness score")
+
+# plot for 2022 dataset
+plot_2022 <- ggplot(data2022, aes(x = `Social support`, y = `Happiness score`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Linear Regression - 2022 Dataset",
+       x = "Social support",
+       y = "Happiness score")
+
+print(plot_2019)
+print(plot_2020)
+print(plot_2022)
+
+
+```
+
+Multiple Linear Regression to show the relationship between freedom to make decisions and happiness score for each dataset
+```{r multiple linear regression graph 2}
+library(ggplot2)
+
+# multiple linear regression model for 2019 dataset
+model_2019_freedom <- lm(`Happiness score` ~ `Freedom to make life choices`, data = data2019)
+summary(model_2019_freedom)
+
+# multiple linear regression model for 2020 dataset
+model_2020_freedom <- lm(`Happiness score` ~ `Freedom to make life choices`, data = data2020)
+summary(model_2020_freedom)
+
+# multiple linear regression model for 2022 dataset
+model_2022_freedom <- lm(`Happiness score` ~ `Freedom to make life choices`, data = data2022)
+summary(model_2022_freedom)
+
+
+# plot for 2019 dataset
+plot_2019_freedom <- ggplot(data2019, aes(x = `Freedom to make life choices`, y = `Happiness score`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(title = "Linear Regression - 2019 Dataset",
+       x = "Freedom to make decisions",
+       y = "Happiness score") 
+
+# plot for 2020 dataset
+plot_2020_freedom <- ggplot(data2020, aes(x = `Freedom to make life choices`, y = `Happiness score`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "green") +
+  labs(title = "Linear Regression - 2020 Dataset",
+       x = "Freedom to make decisions",
+       y = "Happiness score")
+
+# plot for 2022 dataset
+plot_2022_freedom <- ggplot(data2022, aes(x = `Freedom to make life choices`, y = `Happiness score`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Linear Regression - 2022 Dataset",
+       x = "Freedom to make decisions",
+       y = "Happiness score")
+
+print(plot_2019_freedom)
+print(plot_2020_freedom)
+print(plot_2022_freedom)
+
+```

@@ -1,0 +1,605 @@
+---
+title: "Final Project"
+author: "Charley Teltschik"
+subtitle: MGSC 310 Final Project Code
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+---
+
+```{r setup, include=FALSE}
+
+# Please leave this code chunk as is. It makes some slight formatting changes to alter the output to be more aesthetically pleasing. 
+
+library(knitr)
+
+# Change the number in set seed to your own favorite number
+set.seed(1818)
+options(width=70)
+options(scipen=99)
+
+
+# this sets text outputted in code chunks to small
+opts_chunk$set(tidy.opts=list(width.wrap=50),tidy=TRUE, size = "vsmall")  
+opts_chunk$set(message = FALSE,                                          
+               warning = FALSE,
+               # "caching" stores objects in code chunks and only rewrites if you change things
+               cache = FALSE,                               
+               # automatically downloads dependency files
+               autodep = TRUE,
+               # 
+               cache.comments = FALSE,
+               # 
+               collapse = TRUE,
+               # change fig.width and fig.height to change the code height and width by default
+               fig.width = 5.5,  
+               fig.height = 4.5,
+               fig.align='center')
+
+
+```
+
+```{r setup-2}
+
+# Always print this out before your assignment
+sessionInfo()
+getwd()
+
+```
+
+
+<!-- ### start answering your problem set here -->
+<!-- You may export your homework in either html or pdf, with the former usually being easier. 
+     To export or compile your Rmd file: click above on 'Knit' then 'Knit to HTML' -->
+<!-- Be sure to submit both your .Rmd file and the compiled .html or .pdf file for full credit -->
+
+
+```{r setup-3}
+
+# load all your libraries in this chunk 
+library('readr')
+library('ggplot2')
+library('dplyr')
+library('tidyverse')
+library('rsample')
+library('forcats')
+library('randomForest')
+library('glmnet')
+library('glmnetUtils')
+# note, do not run install.packages() inside a code chunk. install them in the console outside of a code chunk. 
+
+```
+
+## DATA CLEANING
+
+READING IN DATA:
+
+```{r}
+
+data2019 <- read_csv("/Users/charleyteltschik/Documents/MGSC_310/datasets/2019.csv")
+data2020 <- read_csv("/Users/charleyteltschik/Documents/MGSC_310/datasets/2020.csv")
+
+```
+
+
+DATA CLEANING:
+
+```{r}
+
+data2019 <- data2019 %>% rename(`Country` = `Country or region`,
+                                `Happiness score` = Score)
+data2020 <- data2020 %>% rename(`Country` = `Country name`,
+                                `Happiness score` = `Ladder score`)
+
+names(data2019)
+names(data2020)
+
+```
+
+
+## DATA 2019
+
+THIS CODE DEMONSTRATES DATA WITH RECORDED HAPPINESS SCORES AS IS
+
+```{r}
+
+data_happy7 <- data2019 %>% filter(`Happiness score` >= 7.0) %>% select(Country | `Happiness score`)
+print(data_happy7)
+
+```
+
+```{r}
+
+ggplot(data_happy7, aes(x = Country, y = `Happiness score`, fill = `Happiness score`)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Countries w/Happiness Score >= 7 (2019)")
+
+```
+
+```{r}
+data_happy6 <- data2019 %>% filter(`Happiness score` >= 6.0, `Happiness score` < 7.0) %>% 
+  select(Country | `Happiness score`)
+print(data_happy6)
+
+```
+
+```{r}
+ggplot(data_happy6, aes(x = Country, y = `Happiness score`, fill = `Happiness score`)) +
+  geom_bar(stat = "identity", position = "dodge") + ylim(0,8) +
+  labs(title = "Countries' Happiness Score >= 6 & < 7 (2019)")
+
+```
+
+```{r}
+data_happy5 <- data2019 %>% filter(`Happiness score` >= 5.0, `Happiness score` < 6.0) %>% 
+  select(Country | `Happiness score`)
+print(data_happy5)
+
+```
+
+```{r}
+ggplot(data_happy5, aes(x = Country, y = `Happiness score`, fill = `Happiness score`)) +
+  geom_bar(stat = "identity", position = "dodge") + ylim(0,8) +
+  labs(title = "Countries' Happiness Score >= 5 & < 6 (2019)")
+
+```
+
+```{r}
+data_happy4 <- data2019 %>% filter(`Happiness score` >= 4.0, `Happiness score` < 5.0) %>% 
+  select(Country | `Happiness score`)
+print(data_happy4)
+
+```
+
+```{r}
+ggplot(data_happy4, aes(x = Country, y = `Happiness score`, fill = `Happiness score`)) +
+  geom_bar(stat = "identity", position = "dodge") + ylim(0,8) +
+  labs(title = "Countries' Happiness Score >= 4 & < 5 (2019)")
+
+```
+
+```{r}
+data_happy3 <- data2019 %>% filter(`Happiness score` >= 3.0, `Happiness score` < 4.0) %>% 
+  select(Country | `Happiness score`)
+print(data_happy3)
+
+```
+
+```{r}
+ggplot(data_happy3, aes(x = Country, y = `Happiness score`, fill = `Happiness score`)) +
+  geom_bar(stat = "identity", position = "dodge") + ylim(0,8) +
+  labs(title = "Countries' Happiness Score >= 3 & < 4 (2019)")
+
+```
+
+```{r}
+data_happy2 <- data2019 %>% filter(`Happiness score` >= 2.0, `Happiness score` < 3.0) %>% 
+  select(Country | `Happiness score`)
+print(data_happy2)
+
+```
+
+```{r}
+ggplot(data_happy2, aes(x = Country, y = `Happiness score`, fill = `Happiness score`)) +
+  geom_bar(stat = "identity", position = "dodge") + ylim(0,8) +
+  labs(title = "Countries' Happiness Score >= 2 & < 3 (2019)")
+
+```
+
+DESCRIPTIVE PLOT 2019 W/FACET WRAP
+
+```{r}
+data_list <- list(`Scores 7+` = data_happy7, `7 > Scores > 6` = data_happy6, `6 > Scores > 5` = data_happy5,
+                  `4 > Scores > 5` = data_happy4, `3 > Scores > 4` = data_happy3, `2 > Scores > 3` = data_happy2)
+combined_data <- bind_rows(data_list, .id = "dataset")
+ggplot(combined_data, aes(x = Country, y = `Happiness score`)) +
+  geom_point() +
+  labs(title = "All Happiness Scores 2019", x = "Country", y = "Happiness Score (out of 10)") +
+  facet_wrap(~ dataset)
+
+```
+
+
+# SPLITTING DATA INTO TRAIN AND TEST SETS
+
+```{r}
+
+data2019_split <- initial_split(data2019, prop = 0.75)
+data2019_train <- training(data2019_split)
+data2019_test <- testing(data2019_split)
+
+data2019_train <- data2019_train %>% mutate(
+  social_support = `Social support`,
+  freed_choices = `Freedom to make life choices`,
+  generosity = `Generosity`,
+  perc_corrup = `Perceptions of corruption`,
+  health_life = `Healthy life expectancy`
+)
+
+data2019_test <- data2019_test %>% mutate(
+  social_support = `Social support`,
+  freed_choices = `Freedom to make life choices`,
+  generosity = `Generosity`,
+  perc_corrup = `Perceptions of corruption`,
+  health_life = `Healthy life expectancy`
+)
+
+```
+
+LINEAR REGRESSIN MODEL 1: FREEDOM TO MAKE LIFE CHOICES
+
+```{r}
+
+mod1 <- lm(`Happiness score` ~ `Freedom to make life choices`,
+                        data = data2019_train)
+summary(mod1)
+
+ggplot(mod1, aes(x = `Freedom to make life choices`, y = `Happiness score`)) +
+  geom_point() + geom_smooth(method = "lm") +
+  labs(title = "Freedom to Make Life Choices on Happiness Score (2019)")
+
+```
+
+
+LOOKING AT VARIABLE IMPORTANCE
+
+```{r}
+
+rf_fit3 <- randomForest(
+  `Happiness score` ~ social_support + freed_choices + generosity + perc_corrup +
+    health_life, data = data2019_train)
+print(rf_fit3)
+
+importance(rf_fit3)
+
+```
+
+```{r}
+
+varImpPlot(rf_fit3)
+
+```
+
+LINEAR REGRESSION MODEL 2: SOCIAL SUPPORT
+
+```{r}
+
+mod2 <- lm(`Happiness score` ~ `Social support`,
+           data = data2019_train)
+summary(mod2)
+
+ggplot(mod2, aes(x = `Social support`, y = `Happiness score`)) +
+  geom_point() + geom_smooth(method = "lm")+
+  labs(title = "Social on Happiness Score (2019)")
+
+```
+
+
+
+# PREDICTED TRUE PLOTS: FREEDOM TO MAKE LIFE CHOICES AND SOCIAL SUPPORT
+
+```{r}
+
+mod3 <- lm(`Happiness score` ~ freed_choices + social_support,
+           data = data2019_train)
+summary(mod3)
+
+```
+
+```{r}
+
+preds_train <- predict(mod3, newdata = data2019_train)
+preds_test <- predict(mod3, newdata = data2019_test)
+
+results_train <- 
+  tibble(
+    `preds` = preds_train,
+    `true` = paste(data2019_train$freed_choices, data2019_train$social_support),
+    `type` = "train"
+  )
+
+results_test <- 
+  tibble(
+    `preds` = preds_test,
+    `true` = paste(data2019_test$freed_choices, data2019_test$social_support),
+    `type` = "test"
+  )
+
+results_df <- 
+  bind_rows(results_train, results_test)
+
+ggplot(results_df, aes(x = true, y = preds)) +
+  geom_point(aes(color = type)) + 
+  geom_abline(color = "red") +
+  facet_wrap(~ type) +
+  ylim(0,10) +
+  theme_minimal(base_size = 16) + 
+  theme(legend.position="bottom") +
+  labs(title = "Predicted Trues: Freedom & Social Support (2019)")
+
+```
+
+CREATING RIDGE REGRESSION & LOOKING AT COEFFICIENTS
+
+```{r}
+
+ridge_mod1 <- cv.glmnet(`Happiness score` ~ social_support + freed_choices,
+                       data = data2019_train,
+                       alpha = 0)
+plot(ridge_mod1)
+
+```
+
+```{r}
+
+coef(ridge_mod1, s = ridge_mod$lambda.min)
+
+```
+
+
+
+## DATA 2020
+
+THIS CODE DEMONSTRATES DATA WITH RECORDED HAPPINESS SCORES AS IS
+
+```{r}
+
+data_happy7 <- data2020 %>% filter(`Happiness score` >= 7.0) %>% select(Country | `Happiness score`)
+print(data_happy7)
+
+```
+
+
+```{r}
+
+ggplot(data_happy7, aes(x = Country, y = `Happiness score`, fill = `Happiness score`)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Countries w/Happiness Score >= 7 (2020)")
+
+```
+
+
+```{r}
+
+data_happy6 <- data2020 %>% filter(`Happiness score` >= 6.0, `Happiness score` < 7.0) %>% 
+  select(Country | `Happiness score`)
+print(data_happy6)
+
+```
+
+
+```{r}
+
+ggplot(data_happy6, aes(x = Country, y = `Happiness score`, fill = `Happiness score`)) +
+  geom_bar(stat = "identity", position = "dodge") + ylim(0,8) +
+  labs(title = "Countries' Happiness Score >= 6 & < 7 (2020)")
+
+```
+
+
+```{r}
+
+data_happy5 <- data2020 %>% filter(`Happiness score` >= 5.0, `Happiness score` < 6.0) %>% 
+  select(Country | `Happiness score`)
+print(data_happy5)
+
+```
+
+
+```{r}
+
+ggplot(data_happy5, aes(x = Country, y = `Happiness score`, fill = `Happiness score`)) +
+  geom_bar(stat = "identity", position = "dodge") + ylim(0,8) +
+  labs(title = "Countries' Happiness Score >= 5 & < 6 (2020)")
+
+```
+
+
+```{r}
+
+data_happy4 <- data2020 %>% filter(`Happiness score` >= 4.0, `Happiness score` < 5.0) %>% 
+  select(Country | `Happiness score`)
+print(data_happy4)
+
+```
+
+
+```{r}
+
+ggplot(data_happy4, aes(x = Country, y = `Happiness score`, fill = `Happiness score`)) +
+  geom_bar(stat = "identity", position = "dodge") + ylim(0,8) +
+  labs(title = "Countries' Happiness Score >= 4 & < 5 (2020)")
+
+```
+
+
+```{r}
+
+data_happy3 <- data2020 %>% filter(`Happiness score` >= 3.0, `Happiness score` < 4.0) %>% 
+  select(Country | `Happiness score`)
+print(data_happy3)
+
+```
+
+
+```{r}
+
+ggplot(data_happy3, aes(x = Country, y = `Happiness score`, fill = `Happiness score`)) +
+  geom_bar(stat = "identity", position = "dodge") + ylim(0,8) +
+  labs(title = "Countries' Happiness Score >= 3 & < 4 (2020)")
+
+```
+
+
+```{r}
+
+data_happy2 <- data2020 %>% filter(`Happiness score` >= 2.0, `Happiness score` < 3.0) %>% 
+  select(Country | `Happiness score`)
+print(data_happy2)
+
+```
+
+
+```{r}
+
+ggplot(data_happy2, aes(x = Country, y = `Happiness score`, fill = `Happiness score`)) +
+  geom_bar(stat = "identity", position = "dodge") + ylim(0,8) +
+  labs(title = "Countries' Happiness Score >= 2 & < 3 (2020)")
+
+```
+
+
+DESCRIPTIVE PLOT AS SCATTER PLOTS
+
+```{r}
+
+data_list <- list(`Scores 7+` = data_happy7, `7 > Scores > 6` = data_happy6, `6 > Scores > 5` = data_happy5,
+                  `4 > Scores > 5` = data_happy4, `3 > Scores > 4` = data_happy3, `2 > Scores > 3` = data_happy2)
+combined_data <- bind_rows(data_list, .id = "dataset")
+ggplot(combined_data, aes(x = Country, y = `Happiness score`)) +
+  geom_point() +
+  labs(title = "Happiness scores 2020", x = "Country", y = "Happiness Score (out of 10)") +
+  facet_wrap(~ dataset)
+
+```
+
+SPLITTING THE DATA INTO TRAIN & TEST SETS
+
+```{r}
+
+data2020_split <- initial_split(data2020, prop = 0.75)
+data2020_train <- training(data2020_split)
+data2020_test <- testing(data2020_split)
+
+data2020_train <- data2020_train %>% mutate(
+  social_support = `Social support`,
+  freed_choices = `Freedom to make life choices`,
+  generosity = `Generosity`,
+  perc_corrup = `Perceptions of corruption`,
+  health_life = `Healthy life expectancy`
+)
+
+data2020_test <- data2020_test %>% mutate(
+  social_support = `Social support`,
+  freed_choices = `Freedom to make life choices`,
+  generosity = `Generosity`,
+  perc_corrup = `Perceptions of corruption`,
+  health_life = `Healthy life expectancy`
+)
+
+```
+
+
+LINEAR REGRESSION MODEL 4: FREEDOM TO MAKE LIFE CHOICES
+
+```{r}
+
+mod4 <- lm(`Happiness score` ~ freed_choices,
+           data = data2020_train)
+summary(mod4)
+
+```
+
+
+```{r}
+
+ggplot(mod4, aes(x = freed_choices, y = `Happiness score`)) +
+  geom_point() + geom_smooth(method = "lm") +
+  labs(title = "Freedom to Make Life Choices on Happiness Score (2020)")
+
+```
+
+
+LOOKING AT VARIABLE IMPORTANCE
+
+```{r}
+
+rf_fit2 <- randomForest(
+  `Happiness score` ~ social_support + freed_choices + generosity + perc_corrup +
+    health_life, data = data2020_train)
+
+importance(rf_fit2)
+
+```
+
+```{r}
+
+varImpPlot(rf_fit2)
+
+```
+
+
+LINEAR REGRESSION MODEL 5: SOCIAL SUPPORT
+
+```{r}
+
+mod5 <- lm(`Happiness score` ~ `Social support`,
+           data = data2020_train)
+summary(mod5)
+
+```
+
+
+```{r}
+
+ggplot(mod5, aes(x = `Social support`, y = `Happiness score`)) +
+  geom_point() + geom_smooth(method = "lm") +
+  labs(title = "Social Support on Happiness Score (2020)")
+
+
+```
+
+
+PREDICTED TRUE PLOTS
+
+```{r}
+
+preds_train <- predict(mod, newdata = data2020_train)
+preds_test <- predict(mod, newdata = data2020_test)
+
+results_train <- 
+  tibble(
+    `preds` = preds_train,
+    `true` = paste(data2020_train$freed_choices, data2020_train$social_support),
+    `type` = "train"
+  )
+
+results_test <- 
+  tibble(
+    `preds` = preds_test,
+    `true` = paste(data2020_test$freed_choices, data2020_test$social_support),
+    `type` = "test"
+  )
+
+results_df <- 
+  bind_rows(results_train, results_test)
+
+ggplot(results_df, aes(x = true, y = preds)) +
+  geom_point(aes(color = type)) + 
+  geom_abline(color = "red") +
+  facet_wrap(~ type) +
+  theme_minimal(base_size = 16) + 
+  theme(legend.position="bottom") +
+  labs(title = "Predicted Trues: Freedom & Social Support (2020)")
+
+```
+
+
+RIDGE REGRESSION
+
+```{r}
+
+ridge_mod2 <- cv.glmnet(`Happiness score` ~ social_support + freed_choices,
+                        data = data2020_train,
+                        alpha = 0)
+plot(ridge_mod2)
+
+```
+
+```{r}
+
+coef(ridge_mod2, s = ridge_mod$lambda.min)
+
+```
+
